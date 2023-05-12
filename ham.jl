@@ -1,5 +1,5 @@
 ENV["MPLBACKEND"]="tkagg";
-using QuantumOptics, PyPlot
+using QuantumOptics, PyPlot, Arpack
 
 rc("font", family="serif")
 
@@ -16,16 +16,17 @@ function Ham(h::Float64,j::Int)
     return hamiltonian
 end
 
-function echo(hi,hf,t)
-    ei,vi=eigenstates(Ham(hi,j),info=false)
-    echo=abs(expect(exp(dense(-1im*t*Ham(hf,j))),vi[1]))^2
+function echo(hi,hf,j,t)
+    e,v=eigs(Ham(hi,j).data,nev=1,which=:SM)
+    vi=Ket(SpinBasis(2*j),v)
+    echo=abs(expect(exp(dense(-1im*t*Ham(hf,j))),vi))^2
     return echo
 end
 
 
-j=10
+j=100
 hi=0.5
 hf=0.75
 t=range(0,40,100)
-plot(t, echo.(hi,hf,t))
+plot(t, echo.(hi,hf,j,t))
 PyPlot.show()
